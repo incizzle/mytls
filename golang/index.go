@@ -22,6 +22,7 @@ type myTLSRequest struct {
 		Headers map[string]string `json:"headers"`
 		Body string `json:"body"`
 		Ja3 string `json:"ja3"`
+		Proxy string  `json:"proxy"`
 	} `json:"options"`
 }
 
@@ -88,6 +89,15 @@ func main() {
 			return
 		}
 
+		
+		rawProxy := mytlsrequest.Options.Proxy
+		if rawProxy != "" {
+			proxyUrl, _ := url.Parse(rawProxy)
+			proxy := http.ProxyURL(proxyUrl)
+			tr.Proxy = proxy
+		}
+		
+
 		client := &http.Client{Transport: tr}
 
 		req, err := http.NewRequest(strings.ToUpper(mytlsrequest.Options.Method), mytlsrequest.Options.URL, strings.NewReader(mytlsrequest.Options.Body))
@@ -121,7 +131,7 @@ func main() {
 			if name == "Set-Cookie" {
 				headers[name] = strings.Join(values, "/,/")
 			} else {
-				for _, value := range values {		
+				for _, value := range values {
 					headers[name] = value
 				}
 			}
@@ -136,7 +146,7 @@ func main() {
 			log.Print(mytlsrequest.RequestID + "Request_Id_On_The_Left" + err.Error())
 			return
 		}
-		
+
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
 			log.Print(mytlsrequest.RequestID + "Request_Id_On_The_Left" + err.Error())
